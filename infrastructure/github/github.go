@@ -3,6 +3,7 @@ package github
 import (
 	"database/sql"
 	"fmt"
+	"github.com/PingCAP-QE/dashboard/infrastructure/github/processing/team"
 	"sync"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -53,12 +54,19 @@ func FetchQuery(c crawlerConfig.Config, owner, name string) model.Query {
 
 //insertData insert all the data fetched from database
 func InsertQuery(db *sql.DB, totalData model.Query, owner string, c *config.Config) {
+	fmt.Printf("Processing %s\n...", totalData.Repository.Name)
+	var wg sync.WaitGroup
+
+	fmt.Println("Inserting Repository...")
 	insert.Repository(db, totalData.Repository, owner)
 
+	fmt.Println("Inserting Timeline...")
 	insert.Timeline(db, c)
 	insert.WeekLine(db, c)
 	insert.TimelineRepository(db, totalData.Repository)
-	var wg sync.WaitGroup
+
+	fmt.Println("Inserting User...")
+
 	for _, user := range totalData.Repository.AssignableUsers.Nodes {
 		wg.Add(1)
 		go func(user *model.User) {
@@ -68,6 +76,7 @@ func InsertQuery(db *sql.DB, totalData model.Query, owner string, c *config.Conf
 	}
 	wg.Wait()
 
+	fmt.Println("Inserting Label...")
 	for _, label := range totalData.Repository.Labels.Nodes {
 		wg.Add(1)
 		go func(label *model.Label) {
@@ -77,7 +86,6 @@ func InsertQuery(db *sql.DB, totalData model.Query, owner string, c *config.Conf
 		}(label)
 	}
 	wg.Wait()
-
 	for _, weight := range c.LabelSeverityWeight {
 		wg.Add(1)
 		go func(weight config.LabelSeverityWeight) {
@@ -87,6 +95,8 @@ func InsertQuery(db *sql.DB, totalData model.Query, owner string, c *config.Conf
 	}
 	wg.Wait()
 
+
+	fmt.Println("Inserting Issue...")
 	for _, issue := range totalData.Repository.Issues.Nodes {
 		wg.Add(1)
 		go func(issue *model.Issue) {
@@ -96,6 +106,7 @@ func InsertQuery(db *sql.DB, totalData model.Query, owner string, c *config.Conf
 	}
 	wg.Wait()
 
+	fmt.Println("Inserting Comment...")
 	for _, issue := range totalData.Repository.Issues.Nodes {
 		for _, issueComment := range issue.Comments.Nodes {
 			wg.Add(1)
@@ -107,6 +118,7 @@ func InsertQuery(db *sql.DB, totalData model.Query, owner string, c *config.Conf
 	}
 	wg.Wait()
 
+	fmt.Println("Inserting Version...")
 	for _, ref := range totalData.Repository.Refs.Nodes {
 		wg.Add(1)
 		go func(ref *model.Ref) {
@@ -116,7 +128,6 @@ func InsertQuery(db *sql.DB, totalData model.Query, owner string, c *config.Conf
 		}(ref)
 	}
 	wg.Wait()
-
 	for _, issue := range totalData.Repository.Issues.Nodes {
 		for _, issueComment := range issue.Comments.Nodes {
 			wg.Add(1)
@@ -128,6 +139,8 @@ func InsertQuery(db *sql.DB, totalData model.Query, owner string, c *config.Conf
 	}
 	wg.Wait()
 
+
+	fmt.Println("Inserting IssueLabel...")
 	for _, issue := range totalData.Repository.Issues.Nodes {
 		for _, label := range issue.Labels.Nodes {
 			wg.Add(1)
@@ -139,6 +152,7 @@ func InsertQuery(db *sql.DB, totalData model.Query, owner string, c *config.Conf
 	}
 	wg.Wait()
 
+	fmt.Println("Inserting UserIssue...")
 	for _, issue := range totalData.Repository.Issues.Nodes {
 		for _, user := range issue.Assignees.Nodes {
 			wg.Add(1)
@@ -146,6 +160,19 @@ func InsertQuery(db *sql.DB, totalData model.Query, owner string, c *config.Conf
 				insert.UserIssue(db, issue, user)
 				defer wg.Done()
 			}(issue, user)
+		}
+	}
+	wg.Wait()
+
+	fmt.Println("Inserting TeamIssue...")
+	for _, issue := range totalData.Repository.Issues.Nodes {
+		teams := team.GetTeams(totalData.Repository.Name, issue)
+		for _, team := range teams {
+			wg.Add(1)
+			go func(issue *model.Issue, team string) {
+				insert.TeamIssue(db, issue, team)
+				defer wg.Done()
+			}(issue, team)
 		}
 	}
 	wg.Wait()
@@ -166,6 +193,7 @@ func RunInfrastructure(c config.Config) {
 	}
 
 	truncate.AllClear(db)
+	insert.Team(db, &c)
 
 	for i, query := range queries {
 		InsertQuery(db, query, c.RepositoryArgs[i].Owner, &c)
