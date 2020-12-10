@@ -50,24 +50,28 @@ ServerUrl = "https://api.github.com/graphql"
 Authorization = []
 
 [DatabaseConfig]
-DatabaseUrl = "root:123456@tcp(127.0.0.1:3307)/github_info"
+DatabaseUrl = ""
 
 [[TeamArgs]]
-Name = "SQL-Engine"
+Name = "Runtime"
+Size = 7
+
+[[TeamArgs]]
+Name = "Optimizer"
+Size = 7
+
+[[TeamArgs]]
+Name = "Transaction-A Transaction-B"
 Size = 11
 
 [[TeamArgs]]
-Name = "TP-Arch"
-Size = 13
+Name = "General"
+Size = 9
 
 [[TeamArgs]]
-Name = "SQL-Metadata"
-Size = 7
+Name = "TP-Storage Cloud-Storage"
+Size = 15
 
 [[TeamArgs]]
 Name = "Scheduling"
 Size = 9
-
-[[TeamArgs]]
-Name = "TP-Storage"
-Size = 14
