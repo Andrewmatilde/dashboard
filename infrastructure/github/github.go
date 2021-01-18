@@ -18,7 +18,6 @@ import (
 	dbConfig "github.com/PingCAP-QE/dashboard/infrastructure/github/database/config"
 	"github.com/PingCAP-QE/dashboard/infrastructure/github/database/insert"
 	"github.com/PingCAP-QE/dashboard/infrastructure/github/database/truncate"
-	"github.com/PingCAP-QE/libs/coverage"
 )
 
 var db *sql.DB
@@ -120,6 +119,28 @@ func InsertQuery(db *sql.DB, totalData model.Query, owner string, c *config.Conf
 	}
 	wg.Wait()
 
+	fmt.Println("Inserting PullRequest...")
+	for _, pr := range totalData.Repository.PullRequests.Nodes {
+		wg.Add(1)
+		go func(pr *model.PullRequest) {
+			insert.PullRequest(db, totalData.Repository, pr)
+			defer wg.Done()
+		}(pr)
+	}
+	wg.Wait()
+
+	fmt.Println("Inserting PrComment...")
+	for _, pr := range totalData.Repository.PullRequests.Nodes {
+		for _, prComment := range pr.Comments.Nodes {
+			wg.Add(1)
+			go func(pr *model.PullRequest, prComment *model.IssueComment) {
+				insert.PrComment(db, pr, prComment)
+				defer wg.Done()
+			}(pr, prComment)
+		}
+	}
+	wg.Wait()
+
 	fmt.Println("Inserting Version...")
 	for _, ref := range totalData.Repository.Refs.Nodes {
 		wg.Add(1)
@@ -153,6 +174,18 @@ func InsertQuery(db *sql.DB, totalData model.Query, owner string, c *config.Conf
 	}
 	wg.Wait()
 
+	fmt.Println("Inserting PullRequestsLabel...")
+	for _, pr := range totalData.Repository.PullRequests.Nodes {
+		for _, label := range pr.Labels.Nodes {
+			wg.Add(1)
+			go func(pr *model.PullRequest, label *model.Label) {
+				insert.PullRequestLabel(db, totalData.Repository, pr, label)
+				defer wg.Done()
+			}(pr, label)
+		}
+	}
+	wg.Wait()
+
 	fmt.Println("Inserting UserIssue...")
 	for _, issue := range totalData.Repository.Issues.Nodes {
 		for _, user := range issue.Assignees.Nodes {
@@ -161,6 +194,18 @@ func InsertQuery(db *sql.DB, totalData model.Query, owner string, c *config.Conf
 				insert.UserIssue(db, issue, user)
 				defer wg.Done()
 			}(issue, user)
+		}
+	}
+	wg.Wait()
+
+	fmt.Println("Inserting UserPullRequests...")
+	for _, pr := range totalData.Repository.PullRequests.Nodes {
+		for _, user := range pr.Assignees.Nodes {
+			wg.Add(1)
+			go func(pr *model.PullRequest, user *model.User) {
+				insert.UserPullRequest(db, pr, user)
+				defer wg.Done()
+			}(pr, user)
 		}
 	}
 	wg.Wait()
@@ -183,14 +228,6 @@ func InsertQuery(db *sql.DB, totalData model.Query, owner string, c *config.Conf
 func RunInfrastructure(c config.Config) {
 
 	initDB(c.DatabaseConfig)
-
-	fmt.Println("Processing coverage...")
-	for _, repositoryArg := range c.RepositoryArgs {
-		err := coverage.ProcessCoverage(db, repositoryArg.Owner, repositoryArg.Name)
-		if err != nil {
-			fmt.Printf("ProcessCoverage error: %v\n", err)
-		}
-	}
 
 	queries := make([]model.Query, len(c.RepositoryArgs))
 	for i, repositoryArg := range c.RepositoryArgs {

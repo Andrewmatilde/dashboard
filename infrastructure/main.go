@@ -2,15 +2,17 @@ package main
 
 import (
 	"fmt"
+	"github.com/PingCAP-QE/dashboard/infrastructure/codecov"
 	"time"
 
+	"github.com/PingCAP-QE/dashboard/infrastructure/config"
 	"github.com/PingCAP-QE/dashboard/infrastructure/github"
-	"github.com/PingCAP-QE/dashboard/infrastructure/github/config"
 )
 
 func main() {
 	c := config.GetConfig("./config.toml")
-	github.RunInfrastructure(c)
+	github.RunInfrastructure(c.GithubConfig)
+	codecov.RunInfrastructure(c)
 	fmt.Printf(
 		`
 	###########################################################################################
@@ -20,7 +22,8 @@ func main() {
 	for {
 		time.Sleep(time.Hour)
 		c = config.GetConfig("./config.toml")
-		github.RunInfrastructure(c)
+		github.RunInfrastructure(c.GithubConfig)
+		codecov.RunInfrastructure(c)
 		fmt.Printf(
 			`
 	###########################################################################################

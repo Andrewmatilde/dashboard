@@ -126,6 +126,15 @@ func QueryCompletenessSpec(totalData *model.Query) error {
 		return err
 	}
 
+	nums = make([]int, len(totalData.Repository.PullRequests.Nodes))
+	for i, _ := range nums {
+		nums[i] = totalData.Repository.PullRequests.Nodes[i].Number
+	}
+	err = IdCompletenessProof(totalData.Repository.PullRequests.TotalCount, nums)
+	if err != nil {
+		return err
+	}
+
 	nums = make([]int, len(totalData.Repository.AssignableUsers.Nodes))
 	for i, _ := range nums {
 		nums[i] = *totalData.Repository.AssignableUsers.Nodes[i].DatabaseID

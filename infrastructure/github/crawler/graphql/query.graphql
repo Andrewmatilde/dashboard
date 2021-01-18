@@ -4,11 +4,13 @@ query GetAll($owner : String!, $repo_name : String!,
     $commentAfter : String,
     $labelAfter : String,
     $tagAfter : String,
+    $pullRequestAfter : String,
     $userPageSize : Int = 100,
     $IssuePageSize : Int = 100,
     $CommentPageSize : Int = 100,
     $labelPageSize : Int = 100,
-    $tagPageSize : Int = 100) {
+    $tagPageSize : Int = 100,
+    $pullRequestSize : Int = 100) {
     repository(owner: $owner, name: $repo_name) {
         databaseId
         url
@@ -87,6 +89,52 @@ query GetAll($owner : String!, $repo_name : String!,
         refs(after: $tagAfter, first: $tagPageSize, refPrefix: "refs/tags/") {
             nodes{
                 name
+            }
+            pageInfo {
+                endCursor
+                hasNextPage
+            }
+            totalCount
+        }
+        pullRequests(after: $pullRequestAfter,
+            first: $pullRequestSize) {
+            nodes {
+                databaseId
+                number
+                author {
+                    login
+                }
+                closed
+                closedAt
+                createdAt
+                labels(first: 100) {
+                    nodes {
+                        name
+                    }
+                }
+                assignees(first: 100) {
+                    nodes {
+                        login
+                        email
+                    }
+                }
+                title
+                body
+                url
+                comments(first: $CommentPageSize, after: $commentAfter) {
+                    nodes {
+                        databaseId
+                        body
+                        author {
+                            login
+                        }
+                    }
+                    pageInfo {
+                        endCursor
+                        hasNextPage
+                    }
+                    totalCount
+                }
             }
             pageInfo {
                 endCursor

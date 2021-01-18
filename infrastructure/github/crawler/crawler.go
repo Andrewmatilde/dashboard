@@ -47,19 +47,21 @@ func pingCountByRepo(request client.Request, variable map[string]interface{}) (m
 func FetchRepo(request client.Request, opt FetchOption) model.Query {
 	// v is arguments rely on query in infrastructure/github/crawler/graphql/query.graphql
 	v := map[string]interface{}{
-		"owner":           opt.Owner,
-		"repo_name":       opt.RepoName,
-		"issueFilters":    opt.IssueFilters,
-		"userAfter":       nil,
-		"issueAfter":      nil,
-		"commentAfter":    nil,
-		"labelAfter":      nil,
-		"tagAfter":        nil,
-		"userPageSize":    0,
-		"IssuePageSize":   0,
-		"CommentPageSize": 0,
-		"labelPageSize":   0,
-		"tagPageSize":     0,
+		"owner":            opt.Owner,
+		"repo_name":        opt.RepoName,
+		"issueFilters":     opt.IssueFilters,
+		"userAfter":        nil,
+		"issueAfter":       nil,
+		"commentAfter":     nil,
+		"labelAfter":       nil,
+		"tagAfter":         nil,
+		"pullRequestAfter": nil,
+		"userPageSize":     0,
+		"IssuePageSize":    0,
+		"CommentPageSize":  0,
+		"labelPageSize":    0,
+		"tagPageSize":      0,
+		"pullRequestSize":  0,
 	}
 
 	log.Printf("Ping count with %v\n", v)
@@ -80,6 +82,15 @@ func FetchRepo(request client.Request, opt FetchOption) model.Query {
 	}
 	log.Printf("Get data issue count: %d \n", totalCount)
 	FetchIssueByRepo(request, totalCount, v, &totalData)
+
+	v["pullRequestSize"] = maxGithubPageSize
+	v["IssuePageSize"] = 0
+	totalCount = totalCountData.Repository.PullRequests.TotalCount
+	if opt.First != nil {
+		totalCount = math.Min(totalCount, *opt.First)
+	}
+	log.Printf("Get data pullRequest count: %d \n", totalCount)
+	FetchPrByRepo(request, totalCount, v, &totalData)
 
 	v["tagPageSize"] = maxGithubPageSize
 	v["IssuePageSize"] = 0
@@ -231,4 +242,36 @@ func FetchUserByRepo(request client.Request,
 		v["userAfter"] = respData.Repository.AssignableUsers.PageInfo.EndCursor
 	}
 	query.Repository.AssignableUsers.TotalCount = totalCount
+}
+
+// FetchPrByRepo Fetch all the Query PullRequest necessary.
+func FetchPrByRepo(request client.Request,
+	totalCount int, v map[string]interface{}, query *model.Query) {
+	log.Printf("Get data PullRequest count: %d \n", totalCount)
+	for count := 0; count < totalCount; count += math.Min(totalCount-count, maxGithubPageSize) {
+		log.Printf("<Fetching PullRequest data %d to %d\n", count, count+math.Min(totalCount-count, maxGithubPageSize))
+		v["pullRequestSize"] = math.Min(totalCount-count, maxGithubPageSize)
+		var respData model.Query
+		retryTimes := 10
+		for {
+			err := request.QueryWithAuthPool(context.Background(), &respData, v)
+			if err != nil {
+				log.Printf(err.Error()+" \n query variables: %v \n retry time: %d", v, 10-retryTimes)
+			} else {
+				break
+			}
+			retryTimes--
+			if retryTimes == 0 {
+				log.Fatal(err.Error()+" \n query variables: %v \n retry time: %d", v, 10-retryTimes)
+			}
+		}
+		log.Printf("Fetch success.>\n")
+		query.Repository.PullRequests.Nodes = append(query.Repository.PullRequests.Nodes, respData.Repository.PullRequests.Nodes...)
+		if !respData.Repository.PullRequests.PageInfo.HasNextPage {
+			break
+		}
+		v["pullRequestAfter"] = respData.Repository.PullRequests.PageInfo.EndCursor
+	}
+
+	query.Repository.PullRequests.TotalCount = totalCount
 }
