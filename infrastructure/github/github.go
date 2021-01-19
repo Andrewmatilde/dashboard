@@ -39,7 +39,7 @@ func initDB(c dbConfig.Config) {
 }
 
 // Fetch fetch all data
-func FetchQuery(c crawlerConfig.Config, owner, name string) model.Query {
+func FetchQuery(c crawlerConfig.Config, owner, name string) (model.Query, error) {
 	client.InitClient(c)
 	request := client.NewClient()
 	opt := crawler.FetchOption{
@@ -50,8 +50,8 @@ func FetchQuery(c crawlerConfig.Config, owner, name string) model.Query {
 		},
 	}
 
-	totalData := crawler.FetchByRepoSafe(request, opt)
-	return totalData
+	totalData, err := crawler.FetchByRepoSafe(request, opt)
+	return totalData, err
 }
 
 //insertData insert all the data fetched from database
@@ -234,11 +234,19 @@ func RunInfrastructure(c config.Config) {
 
 	queries := make([]model.Query, len(c.RepositoryArgs))
 	for i, repositoryArg := range c.RepositoryArgs {
-		queries[i] = FetchQuery(c.CrawlerConfig, repositoryArg.Owner, repositoryArg.Name)
-	}
-
-	if err != nil {
-		panic(err)
+		retryTimes := 3
+		for {
+			queries[i], err = FetchQuery(c.CrawlerConfig, repositoryArg.Owner, repositoryArg.Name)
+			if err != nil {
+				if retryTimes == 0 {
+					panic(err)
+				} else {
+					retryTimes--
+				}
+			} else {
+				break
+			}
+		}
 	}
 
 	truncate.AllClear(db)

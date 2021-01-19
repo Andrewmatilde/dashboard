@@ -20,17 +20,17 @@ type FetchOption struct {
 }
 
 // FetchByRepoSafe Fetch all the data and then check the data.
-func FetchByRepoSafe(request client.Request, opt FetchOption) model.Query {
+func FetchByRepoSafe(request client.Request, opt FetchOption) (model.Query, error) {
 	totalData := FetchRepo(request, opt)
 	err := util.QueryCompletenessSpec(&totalData)
 	if err != nil {
-		log.Fatal(err)
+		return model.Query{}, err
 	}
 	err = util.QueryDataInvalidSpec(&totalData)
 	if err != nil {
-		log.Fatal(err)
+		return model.Query{}, err
 	}
-	return totalData
+	return totalData, nil
 }
 
 // pingCountByRepo ping the graphql server to get  count infos of issues and tags.
