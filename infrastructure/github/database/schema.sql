@@ -135,20 +135,27 @@ create table label_sig
 );
 
 
-create table team
+create table if not exists team
 (
     id int auto_increment
         primary key,
-    name varchar(20) not null,
+    name varchar(40) not null,
     size int null
 );
 
-create table team_label
+create table if not exists team_bug_jail
 (
+    time datetime null,
+    team_id int null,
+    DI float null,
+    in_jail tinyint(1) not null
+);
+
+create table if not exists team_issue
+(
+    issue_id int not null,
     team_id int not null,
-    repository_id int not null,
-    label_id int not null,
-    primary key (label_id, team_id)
+    primary key (issue_id, team_id)
 );
 
 create table timeline
@@ -178,6 +185,16 @@ create table user_issue
     user_id int not null,
     issue_id int not null,
     primary key (user_id, issue_id)
+);
+
+create table user_bug_jail
+(
+    time datetime not null,
+    user_id int not null,
+    in_jail tinyint(1) null,
+    critical int null,
+    di float null,
+    primary key (user_id, time)
 );
 
 create table user_pull_request

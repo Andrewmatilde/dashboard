@@ -3,8 +3,8 @@ package github
 import (
 	"database/sql"
 	"fmt"
+	"github.com/PingCAP-QE/dashboard/infrastructure/github/database/insert/team"
 	"github.com/PingCAP-QE/dashboard/infrastructure/github/database/process"
-	"github.com/PingCAP-QE/dashboard/infrastructure/github/processing/team"
 	"log"
 	"sync"
 
@@ -210,6 +210,8 @@ func InsertQuery(db *sql.DB, totalData model.Query, owner string, c *config.Conf
 	}
 	wg.Wait()
 
+	insert.Team(db, c)
+
 	fmt.Println("Inserting TeamIssue...")
 	for _, issue := range totalData.Repository.Issues.Nodes {
 		teams := team.GetTeams(totalData.Repository.Name, issue)
@@ -222,6 +224,7 @@ func InsertQuery(db *sql.DB, totalData model.Query, owner string, c *config.Conf
 		}
 	}
 	wg.Wait()
+
 }
 
 // RunInfrastructure fetch all the data first and then fetch data 10 days before.
@@ -239,7 +242,6 @@ func RunInfrastructure(c config.Config) {
 	}
 
 	truncate.AllClear(db)
-	insert.Team(db, &c)
 
 	for i, query := range queries {
 		InsertQuery(db, query, c.RepositoryArgs[i].Owner, &c)
