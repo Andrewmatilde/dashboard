@@ -39,6 +39,10 @@ from user where user.login = ?;`,
 }
 
 func ActorPullRequest(db *sql.DB, pull_request *model.PullRequest, actor *model.Actor) {
+	if (actor.Login == "") || (actor.DatabaseID == nil) {
+		fmt.Printf("%v has not enough info\n", actor)
+		return
+	}
 	_, err := db.Exec(`
 insert into user (id,login,email) values (?,?,?) on duplicate key update login=?;`,
 		actor.DatabaseID, actor.Login, actor.Email, actor.Login)
