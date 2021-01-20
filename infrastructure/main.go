@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/PingCAP-QE/dashboard/infrastructure/codecov"
 	"time"
 
+	"github.com/PingCAP-QE/dashboard/infrastructure/codecov"
 	"github.com/PingCAP-QE/dashboard/infrastructure/config"
 	"github.com/PingCAP-QE/dashboard/infrastructure/github"
 )
