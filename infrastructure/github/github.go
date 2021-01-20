@@ -209,7 +209,9 @@ func InsertQuery(db *sql.DB, totalData model.Query, owner string, c *config.Conf
 		}
 		wg.Add(1)
 		go func(pr *model.PullRequest, actor *model.Actor) {
-			insert.ActorPullRequest(db, pr, actor)
+			if actor != nil {
+				insert.ActorPullRequest(db, pr, actor)
+			}
 			defer wg.Done()
 		}(pr, pr.Actor)
 	}
