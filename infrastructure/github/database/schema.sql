@@ -65,6 +65,9 @@ create table pull_request
     closed_week datetime null ,
     created_at datetime not null,
     created_week datetime not null,
+    merged tinyint(1) not null,
+    merged_at datetime not null,
+    merged_week datetime not null,
     title varchar(1000) not null,
     url varchar(1000) not null,
     constraint pull_request_number_repository_id_uindex

@@ -10,17 +10,23 @@ import (
 
 // insert.Issue insert data into table ISSUE
 func PullRequest(db *sql.DB, repo *model.Repository, pull_request *model.PullRequest) {
-	closeAt := util.GetIssueClosedTime(pull_request.Closed, pull_request.ClosedAt)
-	closeAtWeek := util.GetIssueClosedWeek(pull_request.Closed, pull_request.ClosedAt)
-	createAtWeek := util2.ParseDate(pull_request.CreatedAt)
+	closeAt := util.GetTimeOrNull(pull_request.Closed, pull_request.ClosedAt)
+	closeAtDate := util.GetDateOrNull(pull_request.Closed, pull_request.ClosedAt)
+	createAtDate := util2.ParseDate(pull_request.CreatedAt)
+	mergeAt := util.GetTimeOrNull(pull_request.Merged, pull_request.MergedAt)
+	mergeAtDate := util.GetDateOrNull(pull_request.Merged, pull_request.MergedAt)
 	_, err := db.Exec(`
 insert into pull_request 
 (id,number, repository_id, closed, closed_at, 
- closed_week, created_at, created_week, title, url) 
+ closed_week, created_at, created_week,
+ merged, merged_week, merged_at, title, url) 
 values (?,?,?,?,?,
-date_add(?, interval 7 - weekday(?) day),?,date_add(?, interval 7 - weekday(?) day),?,?);`,
+date_add(?, interval 7 - weekday(?) day),?,date_add(?, interval 7 - weekday(?) day),
+?,date_add(?, interval 7 - weekday(?) day),?,?,?);`,
 		pull_request.DatabaseID, pull_request.Number, repo.DatabaseID, pull_request.Closed,
-		closeAt, closeAtWeek, closeAtWeek, pull_request.CreatedAt, createAtWeek, createAtWeek, pull_request.Title, pull_request.Url)
+		closeAt, closeAtDate, closeAtDate, pull_request.CreatedAt, createAtDate, createAtDate,
+		pull_request.Merged, mergeAtDate, mergeAtDate, mergeAt,
+		pull_request.Title, pull_request.Url)
 	if err != nil {
 		fmt.Println("Insert fail while insert into pull_request (id,number, repository_id, closed, closed_at, created_at, title, url) ", err)
 	}

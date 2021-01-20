@@ -16,6 +16,8 @@ type PullRequest struct {
 	CreatedAt  time.Time               `json:"createdAt"`
 	Comments   *IssueCommentConnection `json:"comments"`
 	DatabaseID int                     `json:"databaseId"`
+	Merged     bool                    `json:"merged"`
+	MergedAt   *time.Time              `json:"mergedAt"`
 	Labels     *LabelConnection        `json:"labels"`
 	Number     int                     `json:"number"`
 	Title      string                  `json:"title"`

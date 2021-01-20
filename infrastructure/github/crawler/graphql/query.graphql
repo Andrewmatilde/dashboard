@@ -118,6 +118,8 @@ query GetAll($owner : String!, $repo_name : String!,
                         email
                     }
                 }
+                merged
+                mergedAt
                 title
                 body
                 url
