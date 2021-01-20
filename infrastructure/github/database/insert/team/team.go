@@ -53,6 +53,9 @@ func GetTeams(repo string, issue *model.Issue) []string {
 				teamsMap["Transaction-A Transaction-B"] = true
 				break
 			}
+			if exist(label.Name, []string{"sig/migrate"}) {
+				teamsMap["TP-Storage Cloud-Storage"] = false
+			}
 		}
 	case "pd":
 		teamsMap["Scheduling"] = true

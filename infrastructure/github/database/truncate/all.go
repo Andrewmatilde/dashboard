@@ -42,11 +42,12 @@ func AllClear(db *sql.DB) {
 		"timeline",
 		"timeline_repository",
 		"user",
-		"user_bug_jail",
 		"user_issue",
 		"user_pull_request",
 		"version",
 		"week_line",
 	}
+	// Not clear : "user_bug_jail"
+
 	ClearTablesByName(db, tablesNmaeList)
 }
