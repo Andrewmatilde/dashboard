@@ -37,3 +37,21 @@ from user where user.login = ?;`,
 		fmt.Println("insert into user_pull_request (user_id, pull_request_id)", err)
 	}
 }
+
+func ActorPullRequest(db *sql.DB, pull_request *model.PullRequest, actor *model.Actor) {
+	_, err := db.Exec(`
+insert into user (id,login,email) values (?,?,?) on duplicate key update login=?;`,
+		actor.DatabaseID, actor.Login, actor.Email, actor.Login)
+	if err != nil {
+		fmt.Println("Insert fail while insert into insert into user (id,login,email) ", err)
+	}
+
+	_, err = db.Exec(`
+insert into user_pull_request (user_id, pull_request_id)
+select user.id,?
+from user where user.login = ?;`,
+		pull_request.DatabaseID, actor.Login)
+	if err != nil {
+		fmt.Println("insert into user_pull_request (user_id, pull_request_id)", err)
+	}
+}

@@ -102,7 +102,12 @@ query GetAll($owner : String!, $repo_name : String!,
                 databaseId
                 number
                 author {
-                    login
+                    __typename
+                    ...on User {
+                        databaseId
+                        login
+                        email
+                    }
                 }
                 closed
                 closedAt

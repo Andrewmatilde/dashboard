@@ -207,6 +207,11 @@ func InsertQuery(db *sql.DB, totalData model.Query, owner string, c *config.Conf
 				defer wg.Done()
 			}(pr, user)
 		}
+		wg.Add(1)
+		go func(pr *model.PullRequest, actor *model.Actor) {
+			insert.ActorPullRequest(db, pr, actor)
+			defer wg.Done()
+		}(pr, pr.Actor)
 	}
 	wg.Wait()
 

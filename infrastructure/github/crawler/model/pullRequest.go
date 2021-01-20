@@ -9,6 +9,7 @@ type PullRequestConnection struct {
 }
 
 type PullRequest struct {
+	Actor      *Actor                  `json:"author"`
 	Assignees  *UserConnection         `json:"assignees"`
 	Body       string                  `json:"body"`
 	Closed     bool                    `json:"closed"`
