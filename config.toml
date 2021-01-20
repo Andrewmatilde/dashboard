@@ -58,7 +58,7 @@ ServerUrl = "https://api.github.com/graphql"
 Authorization = []
 
 [DatabaseConfig]
-DatabaseUrl = "root:123456@tcp(172.16.5.219:3310)/github_info"
+DatabaseUrl = "" #root:$password@tcp($ip:$port)/github_info
 
 [[TeamArgs]]
 Name = "Runtime"
