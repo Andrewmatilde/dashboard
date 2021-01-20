@@ -220,12 +220,12 @@ func InsertQuery(db *sql.DB, totalData model.Query, owner string, c *config.Conf
 	fmt.Println("Inserting TeamIssue...")
 	for _, issue := range totalData.Repository.Issues.Nodes {
 		teams := team.GetTeams(totalData.Repository.Name, issue)
-		for _, team := range teams {
+		for _, t := range teams {
 			wg.Add(1)
 			go func(issue *model.Issue, team string) {
 				insert.TeamIssue(db, issue, team)
 				defer wg.Done()
-			}(issue, team)
+			}(issue, t)
 		}
 	}
 	wg.Wait()

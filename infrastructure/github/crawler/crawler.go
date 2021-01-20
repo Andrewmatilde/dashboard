@@ -29,7 +29,7 @@ func FetchByRepoSafe(request client.Request, opt FetchOption) (model.Query, erro
 	err = util.QueryDataInvalidSpec(&totalData)
 	if err != nil {
 		log.Println(err)
-		return model.Query{}, nil
+		return totalData, nil
 	}
 	return totalData, nil
 }
