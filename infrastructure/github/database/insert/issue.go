@@ -13,9 +13,9 @@ import (
 
 // insert.Issue insert data into table ISSUE
 func Issue(db *sql.DB, repo *model.Repository, issue *model.Issue) {
-	closeAt := util.GetIssueClosedTime(issue.Closed, issue.ClosedAt)
-	closeAtWeek := util.GetIssueClosedWeek(issue.Closed, issue.ClosedAt)
-	createAtWeek := util2.ParseDate(issue.CreatedAt)
+	closeAt := util.GetTimeOrNull(issue.Closed, issue.ClosedAt)
+	closeAtDate := util.GetDateOrNull(issue.Closed, issue.ClosedAt)
+	createAtDate := util2.ParseDate(issue.CreatedAt)
 	_, err := db.Exec(`
 insert into issue 
 (id,number, repository_id, closed, closed_at, 
@@ -23,7 +23,7 @@ insert into issue
 values (?,?,?,?,?,
 date_add(?, interval 7 - weekday(?) day),?,date_add(?, interval 7 - weekday(?) day),?,?);`,
 		issue.DatabaseID, issue.Number, repo.DatabaseID, issue.Closed,
-		closeAt, closeAtWeek, closeAtWeek, issue.CreatedAt, createAtWeek, createAtWeek, issue.Title, issue.Url)
+		closeAt, closeAtDate, closeAtDate, issue.CreatedAt, createAtDate, createAtDate, issue.Title, issue.Url)
 	if err != nil {
 		fmt.Println("Insert fail while insert into issue (id,number, repository_id, closed, closed_at, created_at, title, url) ", err)
 	}

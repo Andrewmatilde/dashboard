@@ -9,22 +9,22 @@ import (
 	model2 "github.com/PingCAP-QE/dashboard/infrastructure/github/processing/versions/model"
 )
 
-func GetIssueClosedTime(closed bool, closeAt *time.Time) sql.NullTime {
+func GetTimeOrNull(notNull bool, time *time.Time) sql.NullTime {
 	ct := sql.NullTime{}
-	if closed {
+	if notNull {
 		ct = sql.NullTime{
-			Time:  *closeAt,
+			Time:  *time,
 			Valid: true,
 		}
 	}
 	return ct
 }
 
-func GetIssueClosedWeek(closed bool, closeAt *time.Time) sql.NullTime {
+func GetDateOrNull(notNull bool, time *time.Time) sql.NullTime {
 	ct := sql.NullTime{}
-	if closed {
+	if notNull {
 		ct = sql.NullTime{
-			Time:  util2.ParseDate(*closeAt),
+			Time:  util2.ParseDate(*time),
 			Valid: true,
 		}
 	}

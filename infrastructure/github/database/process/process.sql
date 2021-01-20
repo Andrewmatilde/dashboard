@@ -74,5 +74,4 @@ FROM issue
 WHERE closed = 0
 GROUP BY u.login
 ORDER BY DI
-    DESC;
-;
+    DESC

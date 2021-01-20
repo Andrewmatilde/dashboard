@@ -26,3 +26,14 @@ from user where user.login = ?;`,
 		fmt.Println("insert into user_issue (user_id, issue_id)", err)
 	}
 }
+
+func UserPullRequest(db *sql.DB, pull_request *model.PullRequest, user *model.User) {
+	_, err := db.Exec(`
+insert into user_pull_request (user_id, pull_request_id)
+select user.id,?
+from user where user.login = ?;`,
+		pull_request.DatabaseID, user.Login)
+	if err != nil {
+		fmt.Println("insert into user_pull_request (user_id, pull_request_id)", err)
+	}
+}
