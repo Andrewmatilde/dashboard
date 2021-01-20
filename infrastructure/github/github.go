@@ -215,8 +215,6 @@ func InsertQuery(db *sql.DB, totalData model.Query, owner string, c *config.Conf
 	}
 	wg.Wait()
 
-	insert.Team(db, c)
-
 	fmt.Println("Inserting TeamIssue...")
 	for _, issue := range totalData.Repository.Issues.Nodes {
 		teams := team.GetTeams(totalData.Repository.Name, issue)
@@ -255,7 +253,7 @@ func RunInfrastructure(c config.Config) {
 	}
 
 	truncate.AllClear(db)
-
+	insert.Team(db, &c)
 	for i, query := range queries {
 		InsertQuery(db, query, c.RepositoryArgs[i].Owner, &c)
 	}
